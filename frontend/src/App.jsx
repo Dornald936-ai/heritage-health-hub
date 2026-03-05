@@ -14,8 +14,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // ✅ Backend URL (local). Later for deployment you can switch to env var.
-const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
-
+const API = import.meta.env.VITE_API_URL || "https://heritage-health-hub.onrender.com";
 // ------------------ Helpers ------------------
 function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371;

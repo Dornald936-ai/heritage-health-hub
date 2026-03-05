@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API = import.meta.env.VITE_API_URL || "https://heritage-health-hub.onrender.com";
 
 export default function Admin({ onClose }) {
   const [token, setToken] = useState(localStorage.getItem("hh_token") || "");

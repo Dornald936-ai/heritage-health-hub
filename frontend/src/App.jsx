@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import Admin from "./Admin";
 
+// Leaflet fix
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -28,26 +29,29 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 
 function getRiskStyle(level) {
   const risk = (level || "").toLowerCase();
+
   if (risk === "high") {
     return {
-      bg: "#fff5f5",
-      border: "1px solid #f3c2c2",
-      color: "#8a1111",
+      bg: "#fff1f2",
+      border: "1px solid #fecdd3",
+      color: "#be123c",
       label: "High Risk",
     };
   }
+
   if (risk === "moderate") {
     return {
-      bg: "#fff9ef",
-      border: "1px solid #f4d7a1",
-      color: "#8a5b00",
+      bg: "#fffbeb",
+      border: "1px solid #fde68a",
+      color: "#b45309",
       label: "Moderate Risk",
     };
   }
+
   return {
-    bg: "#f3fff7",
-    border: "1px solid #cfe9d6",
-    color: "#1b6c36",
+    bg: "#f0fdf4",
+    border: "1px solid #bbf7d0",
+    color: "#15803d",
     label: level || "Low Risk",
   };
 }
@@ -55,31 +59,72 @@ function getRiskStyle(level) {
 function AlertCard({ title, text, tone = "info" }) {
   const styles = {
     info: {
-      background: "#f5f8ff",
-      border: "1px solid #d7e4ff",
-      color: "#234a9a",
+      background: "#eff6ff",
+      border: "1px solid #bfdbfe",
+      color: "#1d4ed8",
     },
     warn: {
-      background: "#fff9ef",
-      border: "1px solid #f4d7a1",
-      color: "#8a5b00",
+      background: "#fffbeb",
+      border: "1px solid #fde68a",
+      color: "#b45309",
     },
     danger: {
-      background: "#fff5f5",
-      border: "1px solid #f3c2c2",
-      color: "#8a1111",
+      background: "#fff1f2",
+      border: "1px solid #fecdd3",
+      color: "#be123c",
     },
     success: {
-      background: "#f3fff7",
-      border: "1px solid #cfe9d6",
-      color: "#1b6c36",
+      background: "#f0fdf4",
+      border: "1px solid #bbf7d0",
+      color: "#15803d",
     },
   }[tone];
 
   return (
-    <div style={{ ...styles, borderRadius: 14, padding: 14 }}>
-      <div style={{ fontWeight: 800, marginBottom: 6 }}>{title}</div>
-      <div style={{ fontSize: 13, lineHeight: 1.5 }}>{text}</div>
+    <div
+      style={{
+        ...styles,
+        borderRadius: 16,
+        padding: 16,
+      }}
+    >
+      <div style={{ fontWeight: 800, marginBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: 13, lineHeight: 1.6 }}>{text}</div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, note }) {
+  return (
+    <div
+      style={{
+        background: "white",
+        border: "1px solid #e5e7eb",
+        borderRadius: 18,
+        padding: 18,
+        boxShadow: "0 10px 24px rgba(15,23,42,0.04)",
+      }}
+    >
+      <div style={{ fontSize: 12, color: "#6b7280", fontWeight: 700 }}>{label}</div>
+      <div style={{ fontSize: 30, fontWeight: 800, marginTop: 8, color: "#0f172a" }}>{value}</div>
+      <div style={{ fontSize: 13, color: "#4b5563", marginTop: 8, lineHeight: 1.5 }}>{note}</div>
+    </div>
+  );
+}
+
+function FeatureCard({ title, text }) {
+  return (
+    <div
+      style={{
+        background: "white",
+        border: "1px solid #e5e7eb",
+        borderRadius: 18,
+        padding: 18,
+        boxShadow: "0 10px 24px rgba(15,23,42,0.04)",
+      }}
+    >
+      <div style={{ fontSize: 17, fontWeight: 800 }}>{title}</div>
+      <div style={{ marginTop: 10, color: "#4b5563", fontSize: 14, lineHeight: 1.65 }}>{text}</div>
     </div>
   );
 }
@@ -89,11 +134,11 @@ function buildSmartAlerts(site, weatherObj, nearbyCount) {
   const current = weatherObj?.current;
 
   alerts.push({
-    title: "Site-specific health advice",
+    title: "Site-specific health guidance",
     tone: "info",
     text:
       site?.health_tip ||
-      "Carry water, wear comfortable shoes, and monitor your energy levels while touring.",
+      "Visitors should stay hydrated, wear suitable walking shoes, and monitor fatigue levels during the visit.",
   });
 
   if (typeof current?.temperature_2m === "number") {
@@ -101,28 +146,28 @@ function buildSmartAlerts(site, weatherObj, nearbyCount) {
       alerts.push({
         title: "Heat alert",
         tone: "danger",
-        text: `Current temperature is around ${current.temperature_2m}°C. Drink water frequently, use sunscreen, and limit prolonged sun exposure.`,
+        text: `Current temperature is about ${current.temperature_2m}°C. Prioritize hydration, shade, and sunscreen use.`,
       });
     } else if (current.temperature_2m >= 24) {
       alerts.push({
         title: "Warm weather advisory",
         tone: "warn",
-        text: `Conditions are warm at around ${current.temperature_2m}°C. Light clothing and hydration are recommended.`,
+        text: `Conditions are warm at about ${current.temperature_2m}°C. Light clothing and frequent water intake are recommended.`,
       });
     } else if (current.temperature_2m <= 10) {
       alerts.push({
         title: "Cold weather advisory",
         tone: "warn",
-        text: `Current temperature is around ${current.temperature_2m}°C. Wear warm layers and avoid long exposure without protection.`,
+        text: `Current temperature is about ${current.temperature_2m}°C. Warm layers are recommended.`,
       });
     }
   }
 
   if (typeof current?.precipitation === "number" && current.precipitation > 0) {
     alerts.push({
-      title: "Rain / slippery surface warning",
+      title: "Rain / slippery surfaces",
       tone: "warn",
-      text: "Rain has been detected. Paths, rocks, or viewing points may be slippery. Walk carefully.",
+      text: "Rain is present. Surfaces may be slippery, especially at rocky or elevated viewpoints.",
     });
   }
 
@@ -130,22 +175,22 @@ function buildSmartAlerts(site, weatherObj, nearbyCount) {
     alerts.push({
       title: "Wind advisory",
       tone: "warn",
-      text: `Wind speed is around ${current.wind_speed_10m} km/h. A light jacket or windbreaker is recommended.`,
+      text: `Wind speed is around ${current.wind_speed_10m} km/h. A jacket or windbreaker is advisable.`,
     });
   }
 
   if (typeof nearbyCount === "number") {
     if (nearbyCount === 0) {
       alerts.push({
-        title: "Limited nearby health access",
+        title: "Limited nearby health support",
         tone: "danger",
-        text: "No nearby clinics, hospitals, or pharmacies were found within the selected search radius.",
+        text: "No nearby clinics, hospitals, or pharmacies were found within the selected radius.",
       });
     } else {
       alerts.push({
-        title: "Nearby assistance available",
+        title: "Nearby support available",
         tone: "success",
-        text: `${nearbyCount} nearby health facilities or pharmacies were identified for this area.`,
+        text: `${nearbyCount} health support locations were identified nearby.`,
       });
     }
   }
@@ -159,24 +204,6 @@ function buildSmartAlerts(site, weatherObj, nearbyCount) {
   }
 
   return alerts;
-}
-
-function StatCard({ label, value, note }) {
-  return (
-    <div
-      style={{
-        background: "white",
-        border: "1px solid #e5e7eb",
-        borderRadius: 18,
-        padding: 18,
-        boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
-      }}
-    >
-      <div style={{ fontSize: 12, color: "#6b7280", fontWeight: 700 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, marginTop: 8 }}>{value}</div>
-      <div style={{ fontSize: 13, color: "#4b5563", marginTop: 8 }}>{note}</div>
-    </div>
-  );
 }
 
 export default function App() {
@@ -217,8 +244,11 @@ export default function App() {
   const filteredSites = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return sites;
+
     return sites.filter((s) =>
-      `${s.name} ${s.province} ${s.category} ${s.summary}`.toLowerCase().includes(q)
+      `${s.name} ${s.province} ${s.category} ${s.summary} ${s.health_tip}`
+        .toLowerCase()
+        .includes(q)
     );
   }, [sites, query]);
 
@@ -236,6 +266,10 @@ export default function App() {
     () => sites.filter((s) => (s.risk_level || "").toLowerCase() === "high").length,
     [sites]
   );
+
+  const provinceCount = useMemo(() => {
+    return new Set(sites.map((s) => s.province).filter(Boolean)).size;
+  }, [sites]);
 
   const openSite = async (site) => {
     setSelected(site);
@@ -286,12 +320,14 @@ export default function App() {
 
   const detectLocation = () => {
     setGpsStatus("");
+
     if (!navigator.geolocation) {
       setGpsStatus("Geolocation is not supported by this browser.");
       return;
     }
 
     setGpsStatus("Detecting your location...");
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude;
@@ -330,6 +366,7 @@ export default function App() {
 
   const siteCount = useMemo(() => sites.length, [sites]);
   const facilities = nearby?.results || [];
+
   const smartAlerts = useMemo(
     () => buildSmartAlerts(selected, weather, facilities.length),
     [selected, weather, facilities]
@@ -341,22 +378,22 @@ export default function App() {
         fontFamily: "Arial, sans-serif",
         background: "#f8fafc",
         minHeight: "100vh",
-        color: "#111827",
+        color: "#0f172a",
       }}
     >
-      <div style={{ maxWidth: 1220, margin: "0 auto", padding: 20 }}>
+      <div style={{ maxWidth: 1240, margin: "0 auto", padding: 20 }}>
         <header
           style={{
             display: "grid",
             gap: 18,
-            gridTemplateColumns: "1.4fr 1fr",
+            gridTemplateColumns: "1.45fr 1fr",
             alignItems: "center",
-            padding: 22,
-            borderRadius: 22,
+            padding: 24,
+            borderRadius: 24,
             background:
-              "linear-gradient(135deg, rgba(20,56,145,1) 0%, rgba(39,120,201,1) 55%, rgba(68,167,181,1) 100%)",
+              "linear-gradient(135deg, rgba(15,23,42,1) 0%, rgba(30,64,175,1) 55%, rgba(6,182,212,1) 100%)",
             color: "white",
-            boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
+            boxShadow: "0 16px 40px rgba(15,23,42,0.18)",
           }}
         >
           <div>
@@ -365,42 +402,42 @@ export default function App() {
                 display: "inline-block",
                 padding: "6px 12px",
                 borderRadius: 999,
-                background: "rgba(255,255,255,0.16)",
+                background: "rgba(255,255,255,0.14)",
                 fontSize: 12,
-                fontWeight: 700,
-                marginBottom: 12,
+                fontWeight: 800,
+                marginBottom: 14,
               }}
             >
-              Heritage Health Hub • Version 2
+              Heritage Health Hub • Stage 3
             </div>
 
-            <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1 }}>
-              Smart tourism health intelligence for Zimbabwe
+            <h1 style={{ margin: 0, fontSize: 38, lineHeight: 1.08 }}>
+              Zimbabwe’s smart tourism health and heritage intelligence platform
             </h1>
 
             <p
               style={{
-                marginTop: 12,
+                marginTop: 14,
                 marginBottom: 0,
-                maxWidth: 700,
+                maxWidth: 760,
                 color: "rgba(255,255,255,0.92)",
-                lineHeight: 1.6,
+                lineHeight: 1.65,
                 fontSize: 15,
               }}
             >
-              A startup-ready platform that helps tourists and visitors explore heritage and
-              tourist sites with real-time weather insights, nearby clinics, live route guidance,
-              smart health alerts, and tourism safety support.
+              Heritage Health Hub combines tourism, public health, maps, live weather, smart alerts,
+              and nearby care access into one platform that helps visitors explore Zimbabwe more
+              safely while supporting a scalable startup model for tourism innovation.
             </p>
 
-            <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button
                 onClick={detectLocation}
                 style={{
                   border: "none",
                   background: "white",
-                  color: "#163f9a",
-                  padding: "11px 14px",
+                  color: "#1d4ed8",
+                  padding: "11px 15px",
                   borderRadius: 12,
                   fontWeight: 800,
                   cursor: "pointer",
@@ -412,10 +449,10 @@ export default function App() {
               <button
                 onClick={() => setShowAdmin(true)}
                 style={{
-                  border: "1px solid rgba(255,255,255,0.4)",
+                  border: "1px solid rgba(255,255,255,0.35)",
                   background: "transparent",
                   color: "white",
-                  padding: "11px 14px",
+                  padding: "11px 15px",
                   borderRadius: 12,
                   fontWeight: 700,
                   cursor: "pointer",
@@ -427,10 +464,10 @@ export default function App() {
               <button
                 onClick={loadSites}
                 style={{
-                  border: "1px solid rgba(255,255,255,0.4)",
+                  border: "1px solid rgba(255,255,255,0.35)",
                   background: "transparent",
                   color: "white",
-                  padding: "11px 14px",
+                  padding: "11px 15px",
                   borderRadius: 12,
                   fontWeight: 700,
                   cursor: "pointer",
@@ -441,7 +478,7 @@ export default function App() {
             </div>
 
             {gpsStatus ? (
-              <div style={{ marginTop: 12, fontSize: 13, color: "rgba(255,255,255,0.92)" }}>
+              <div style={{ marginTop: 12, fontSize: 13, color: "rgba(255,255,255,0.9)" }}>
                 {gpsStatus}
               </div>
             ) : null}
@@ -449,13 +486,14 @@ export default function App() {
 
           <div
             style={{
-              background: "rgba(255,255,255,0.14)",
-              border: "1px solid rgba(255,255,255,0.18)",
-              borderRadius: 18,
+              background: "rgba(255,255,255,0.12)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: 20,
               padding: 18,
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.95 }}>Startup Snapshot</div>
+            <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.95 }}>Investor / VC Snapshot</div>
+
             <div
               style={{
                 marginTop: 14,
@@ -465,20 +503,31 @@ export default function App() {
               }}
             >
               <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 14, padding: 14 }}>
-                <div style={{ fontSize: 11, opacity: 0.9 }}>Coverage</div>
-                <div style={{ fontSize: 22, fontWeight: 800 }}>Zimbabwe</div>
+                <div style={{ fontSize: 11, opacity: 0.9 }}>Problem</div>
+                <div style={{ fontSize: 16, fontWeight: 800, marginTop: 6 }}>
+                  Tourism safety information is fragmented
+                </div>
               </div>
+
               <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 14, padding: 14 }}>
-                <div style={{ fontSize: 11, opacity: 0.9 }}>Sites</div>
-                <div style={{ fontSize: 22, fontWeight: 800 }}>{siteCount}</div>
+                <div style={{ fontSize: 11, opacity: 0.9 }}>Solution</div>
+                <div style={{ fontSize: 16, fontWeight: 800, marginTop: 6 }}>
+                  Unified health-aware tourism platform
+                </div>
               </div>
+
               <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 14, padding: 14 }}>
-                <div style={{ fontSize: 11, opacity: 0.9 }}>Intelligence</div>
-                <div style={{ fontSize: 16, fontWeight: 800 }}>Weather • Health • Maps</div>
+                <div style={{ fontSize: 11, opacity: 0.9 }}>Model</div>
+                <div style={{ fontSize: 16, fontWeight: 800, marginTop: 6 }}>
+                  SaaS + tourism partnerships
+                </div>
               </div>
+
               <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 14, padding: 14 }}>
-                <div style={{ fontSize: 11, opacity: 0.9 }}>Audience</div>
-                <div style={{ fontSize: 16, fontWeight: 800 }}>Tourists • Institutions</div>
+                <div style={{ fontSize: 11, opacity: 0.9 }}>Use Case</div>
+                <div style={{ fontSize: 16, fontWeight: 800, marginTop: 6 }}>
+                  Visitors, institutions, and travel operators
+                </div>
               </div>
             </div>
           </div>
@@ -493,24 +542,46 @@ export default function App() {
           }}
         >
           <StatCard
-            label="Tourism Sites Managed"
+            label="Integrated Sites"
             value={siteCount}
-            note="Heritage and tourist destinations supported by the platform."
+            note="Tourist and heritage sites currently available in the platform."
           />
           <StatCard
-            label="Heritage Coverage"
+            label="Heritage Sites"
             value={heritageCount}
-            note="Cultural and historical sites with safety and health guidance."
+            note="Cultural and historical destinations enhanced with health-aware visitor guidance."
           />
           <StatCard
             label="Tourist Destinations"
             value={touristCount}
-            note="Nature, parks, and leisure destinations enhanced with visitor intelligence."
+            note="Nature and tourism experiences covered with maps, weather, and nearby care access."
           />
           <StatCard
-            label="Higher-Risk Locations"
-            value={highRiskCount}
-            note="Sites requiring stronger caution, emergency awareness, or wildlife-related safety."
+            label="Province Coverage"
+            value={provinceCount}
+            note="Geographic spread of destinations currently supported by the platform."
+          />
+        </section>
+
+        <section
+          style={{
+            marginTop: 18,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: 16,
+          }}
+        >
+          <FeatureCard
+            title="Tourism + Health Integration"
+            text="The platform combines destination discovery with live weather, risk alerts, care access, and site-specific safety guidance."
+          />
+          <FeatureCard
+            title="Commercialization Potential"
+            text="The model can scale through tourism board partnerships, sponsored care providers, premium data services, and institutional dashboards."
+          />
+          <FeatureCard
+            title="Public Value"
+            text="Visitors make better decisions, tourism operators improve trust, and institutions gain a digital layer for safer tourism engagement."
           />
         </section>
 
@@ -521,12 +592,12 @@ export default function App() {
             borderRadius: 18,
             background: "white",
             border: "1px solid #e5e7eb",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
+            boxShadow: "0 10px 24px rgba(15,23,42,0.04)",
           }}
         >
-          <div style={{ fontWeight: 800, fontSize: 20 }}>Zimbabwe Heritage & Tourism Overview</div>
+          <div style={{ fontWeight: 800, fontSize: 20 }}>Zimbabwe Heritage & Tourism Coverage Map</div>
           <div style={{ marginTop: 6, color: "#6b7280", fontSize: 14 }}>
-            National view of sites currently integrated into Heritage Health Hub.
+            National overview of destinations currently integrated into Heritage Health Hub.
           </div>
 
           <div style={{ marginTop: 14 }}>
@@ -560,7 +631,7 @@ export default function App() {
             borderRadius: 18,
             background: "white",
             border: "1px solid #e5e7eb",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
+            boxShadow: "0 10px 24px rgba(15,23,42,0.04)",
           }}
         >
           <div
@@ -573,9 +644,9 @@ export default function App() {
             }}
           >
             <div>
-              <div style={{ fontWeight: 800, fontSize: 20 }}>Explore heritage and tourist sites</div>
+              <div style={{ fontWeight: 800, fontSize: 20 }}>Site Explorer</div>
               <div style={{ marginTop: 4, color: "#6b7280", fontSize: 14 }}>
-                Search by name, province, category, or summary.
+                Search destinations by site name, province, category, summary, or health guidance.
               </div>
             </div>
 
@@ -584,7 +655,7 @@ export default function App() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search sites..."
               style={{
-                minWidth: 280,
+                minWidth: 300,
                 border: "1px solid #d1d5db",
                 borderRadius: 12,
                 padding: "12px 14px",
@@ -603,9 +674,9 @@ export default function App() {
               style={{
                 padding: 14,
                 borderRadius: 14,
-                border: "1px solid #f3c2c2",
-                background: "#fff5f5",
-                color: "#8a1111",
+                border: "1px solid #fecdd3",
+                background: "#fff1f2",
+                color: "#be123c",
               }}
             >
               {err}
@@ -631,7 +702,7 @@ export default function App() {
                       border: "1px solid #e5e7eb",
                       borderRadius: 18,
                       overflow: "hidden",
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
+                      boxShadow: "0 10px 24px rgba(15,23,42,0.04)",
                     }}
                   >
                     <div
@@ -698,7 +769,7 @@ export default function App() {
                           lineHeight: 1.55,
                         }}
                       >
-                        {site.summary || "Explore this location for tourism, safety, and health guidance."}
+                        {site.summary || "Explore this destination with live weather, care access, and site-specific health support."}
                       </div>
 
                       <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -1140,9 +1211,8 @@ export default function App() {
                 fontSize: 13,
               }}
             >
-              VC-ready Version 2: startup landing section, impact dashboard, Zimbabwe overview map,
-              site-specific summaries, weather intelligence, nearby clinics, smart alerts, GPS, and
-              health-aware tourism support.
+              Stage 3 presentation mode: startup landing page, impact metrics, Zimbabwe coverage map,
+              site intelligence, smart alerts, nearby care support, and GPS-enabled tourism safety.
             </div>
           </div>
         </div>

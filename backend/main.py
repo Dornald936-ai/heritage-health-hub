@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime, Text
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
 # -----------------------------
@@ -22,6 +22,7 @@ Base = declarative_base()
 
 class Site(Base):
     __tablename__ = "sites"
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     category = Column(String)  # heritage | tourist
@@ -29,12 +30,19 @@ class Site(Base):
     latitude = Column(Float)
     longitude = Column(Float)
     wiki_title = Column(String, default="")
+    image_url = Column(String, default="")
+    summary = Column(Text, default="")
+    health_tip = Column(Text, default="")
+    risk_level = Column(String, default="Moderate")
+    recommended_items = Column(Text, default="")
+    emergency_note = Column(Text, default="")
     active = Column(Boolean, default=True)
     updated_at = Column(DateTime, default=datetime.utcnow)
 
 
 class User(Base):
     __tablename__ = "users"
+
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
@@ -55,13 +63,11 @@ def get_db():
 # -----------------------------
 # Auth
 # -----------------------------
-SECRET_KEY = "CHANGE_ME_TO_A_LONG_RANDOM_STRING"
+SECRET_KEY = "CHANGE_ME_TO_A_LONG_RANDOM_STRING_FOR_V2"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
-# ✅ FIX: use PBKDF2 (stable) instead of bcrypt (causing your crash)
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
@@ -123,6 +129,12 @@ class SiteIn(BaseModel):
     latitude: float
     longitude: float
     wiki_title: str = ""
+    image_url: str = ""
+    summary: str = ""
+    health_tip: str = ""
+    risk_level: str = "Moderate"
+    recommended_items: str = ""
+    emergency_note: str = ""
     active: bool = True
 
 
@@ -134,7 +146,7 @@ class SiteOut(SiteIn):
 # -----------------------------
 # App
 # -----------------------------
-app = FastAPI(title="Heritage Health Hub API")
+app = FastAPI(title="Heritage Health Hub API V2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -147,28 +159,146 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.get("/")
+def home():
+    return {
+        "status": "ok",
+        "message": "Heritage Health Hub API V2 is running",
+        "docs": "/docs",
+    }
+
+
 # -----------------------------
-# Seed data
+# Seed data (VC-ready V2)
 # -----------------------------
 SEED = [
-    {"name": "Great Zimbabwe National Monument", "category": "heritage", "province": "Masvingo",
-     "latitude": -20.2683, "longitude": 30.9333, "wiki_title": "Great Zimbabwe"},
-    {"name": "Khami Ruins National Monument", "category": "heritage", "province": "Bulawayo",
-     "latitude": -20.1596, "longitude": 28.3737, "wiki_title": "Khami"},
-    {"name": "Matobo Hills", "category": "heritage", "province": "Matabeleland South",
-     "latitude": -20.513, "longitude": 28.500, "wiki_title": "Matobo National Park"},
-    {"name": "Mana Pools National Park", "category": "tourist", "province": "Mashonaland West",
-     "latitude": -15.834, "longitude": 29.386, "wiki_title": "Mana Pools National Park"},
-    {"name": "Victoria Falls (Mosi-oa-Tunya)", "category": "tourist", "province": "Matabeleland North",
-     "latitude": -17.9243, "longitude": 25.8572, "wiki_title": "Victoria Falls"},
-    {"name": "Hwange National Park", "category": "tourist", "province": "Matabeleland North",
-     "latitude": -18.629, "longitude": 26.941, "wiki_title": "Hwange National Park"},
-    {"name": "Gonarezhou National Park", "category": "tourist", "province": "Masvingo",
-     "latitude": -21.000, "longitude": 31.500, "wiki_title": "Gonarezhou National Park"},
-    {"name": "Lake Kariba", "category": "tourist", "province": "Mashonaland West",
-     "latitude": -16.522, "longitude": 28.802, "wiki_title": "Lake Kariba"},
-    {"name": "Eastern Highlands (Nyanga)", "category": "tourist", "province": "Manicaland",
-     "latitude": -18.214, "longitude": 32.747, "wiki_title": "Nyanga National Park"},
+    {
+        "name": "Great Zimbabwe National Monument",
+        "category": "heritage",
+        "province": "Masvingo",
+        "latitude": -20.2683,
+        "longitude": 30.9333,
+        "wiki_title": "Great Zimbabwe",
+        "image_url": "",
+        "summary": "Great Zimbabwe is the largest ancient stone structure in sub-Saharan Africa and a major symbol of Zimbabwean heritage and civilization.",
+        "health_tip": "Visitors should carry drinking water, wear a hat, use sunscreen, and prepare for prolonged walking under strong sun exposure.",
+        "risk_level": "Moderate",
+        "recommended_items": "Water bottle, hat, sunscreen, walking shoes, light snacks",
+        "emergency_note": "If dizziness or dehydration occurs, rest immediately in shade and seek the nearest clinic.",
+    },
+    {
+        "name": "Khami Ruins National Monument",
+        "category": "heritage",
+        "province": "Bulawayo",
+        "latitude": -20.1596,
+        "longitude": 28.3737,
+        "wiki_title": "Khami",
+        "image_url": "",
+        "summary": "Khami Ruins is an important archaeological heritage site near Bulawayo, known for its terraces and stone-built remains.",
+        "health_tip": "Use proper footwear, carry water, and avoid climbing unstable sections. Heat exposure can be significant during midday.",
+        "risk_level": "Moderate",
+        "recommended_items": "Walking shoes, water, hat, sunscreen",
+        "emergency_note": "Take caution on uneven ground and seek help if ankle strain or fatigue occurs.",
+    },
+    {
+        "name": "Matobo Hills",
+        "category": "heritage",
+        "province": "Matabeleland South",
+        "latitude": -20.513,
+        "longitude": 28.500,
+        "wiki_title": "Matobo National Park",
+        "image_url": "",
+        "summary": "Matobo Hills is a UNESCO-listed cultural landscape known for granite formations, spiritual significance, and wildlife.",
+        "health_tip": "Rocky surfaces can be slippery or uneven. Wear strong footwear and avoid risky climbing without support.",
+        "risk_level": "Moderate",
+        "recommended_items": "Hiking shoes, water, cap, small first aid kit",
+        "emergency_note": "Be cautious near steep rock surfaces and monitor fatigue during hikes.",
+    },
+    {
+        "name": "Mana Pools National Park",
+        "category": "tourist",
+        "province": "Mashonaland West",
+        "latitude": -15.834,
+        "longitude": 29.386,
+        "wiki_title": "Mana Pools National Park",
+        "image_url": "",
+        "summary": "Mana Pools is a major safari destination known for wildlife, wilderness, and river-based tourism experiences.",
+        "health_tip": "Carry insect repellent, hydrate frequently, avoid isolated walking, and follow wildlife safety guidance strictly.",
+        "risk_level": "High",
+        "recommended_items": "Insect repellent, water, neutral clothing, sunscreen, first aid kit",
+        "emergency_note": "Do not approach wildlife. In emergencies, contact guides or park authorities immediately.",
+    },
+    {
+        "name": "Victoria Falls (Mosi-oa-Tunya)",
+        "category": "tourist",
+        "province": "Matabeleland North",
+        "latitude": -17.9243,
+        "longitude": 25.8572,
+        "wiki_title": "Victoria Falls",
+        "image_url": "",
+        "summary": "Victoria Falls is one of the world’s great waterfalls and one of Zimbabwe’s most important tourism destinations.",
+        "health_tip": "Surfaces may be wet and slippery near the falls. Wear non-slip shoes, protect electronics from mist, and remain hydrated.",
+        "risk_level": "Moderate",
+        "recommended_items": "Non-slip shoes, rain jacket, water, sunscreen, waterproof bag",
+        "emergency_note": "Take extra care near railings and wet paths. Seek help immediately if slips or breathing discomfort occur.",
+    },
+    {
+        "name": "Hwange National Park",
+        "category": "tourist",
+        "province": "Matabeleland North",
+        "latitude": -18.629,
+        "longitude": 26.941,
+        "wiki_title": "Hwange National Park",
+        "image_url": "",
+        "summary": "Hwange National Park is Zimbabwe’s largest game reserve and a key destination for safari tourism and biodiversity.",
+        "health_tip": "High temperatures, dust, and insects are common. Stay hydrated and keep distance from wildlife at all times.",
+        "risk_level": "High",
+        "recommended_items": "Water, repellent, hat, sunscreen, binoculars, light protective clothing",
+        "emergency_note": "Always follow ranger instructions and remain in designated safe areas.",
+    },
+    {
+        "name": "Gonarezhou National Park",
+        "category": "tourist",
+        "province": "Masvingo",
+        "latitude": -21.000,
+        "longitude": 31.500,
+        "wiki_title": "Gonarezhou National Park",
+        "image_url": "",
+        "summary": "Gonarezhou is a remote wilderness park known for dramatic landscapes, elephants, and conservation value.",
+        "health_tip": "Remote conditions require preparation. Carry sufficient water, medicine, and insect protection.",
+        "risk_level": "High",
+        "recommended_items": "Water, first aid supplies, insect repellent, power bank, sun protection",
+        "emergency_note": "Because of remoteness, seek support early before a health issue escalates.",
+    },
+    {
+        "name": "Lake Kariba",
+        "category": "tourist",
+        "province": "Mashonaland West",
+        "latitude": -16.522,
+        "longitude": 28.802,
+        "wiki_title": "Lake Kariba",
+        "image_url": "",
+        "summary": "Lake Kariba is a major tourism and fishing destination with boating, houseboats, and lakeside recreation.",
+        "health_tip": "Stay hydrated, be cautious on boats, and avoid excessive sun exposure during midday.",
+        "risk_level": "Moderate",
+        "recommended_items": "Life jacket, water, sunscreen, sunglasses, hat",
+        "emergency_note": "Observe boating safety and avoid swimming in unsafe areas.",
+    },
+    {
+        "name": "Eastern Highlands (Nyanga)",
+        "category": "tourist",
+        "province": "Manicaland",
+        "latitude": -18.214,
+        "longitude": 32.747,
+        "wiki_title": "Nyanga National Park",
+        "image_url": "",
+        "summary": "The Eastern Highlands are known for mountains, waterfalls, cool weather, and outdoor tourism such as hiking and scenic exploration.",
+        "health_tip": "Morning temperatures can be low. Wear layers, use proper hiking shoes, and monitor fatigue on steep terrain.",
+        "risk_level": "Moderate",
+        "recommended_items": "Warm jacket, hiking shoes, water, rain protection, snacks",
+        "emergency_note": "Take care on steep or wet trails and avoid solo hiking in unfamiliar terrain.",
+    },
 ]
 
 
@@ -177,11 +307,9 @@ def seed_if_empty(db: Session):
         for s in SEED:
             db.add(Site(**s))
 
-        # Default admin (safe password)
         admin_email = "admin@heritage.local"
         admin_pw = "admin123"
         db.add(User(email=admin_email, hashed_password=hash_password(admin_pw), is_admin=True))
-
         db.commit()
 
 
@@ -236,11 +364,42 @@ def list_sites(db: Session = Depends(get_db)):
             latitude=r.latitude,
             longitude=r.longitude,
             wiki_title=r.wiki_title,
+            image_url=r.image_url,
+            summary=r.summary,
+            health_tip=r.health_tip,
+            risk_level=r.risk_level,
+            recommended_items=r.recommended_items,
+            emergency_note=r.emergency_note,
             active=r.active,
             updated_at=r.updated_at,
         )
         for r in rows
     ]
+
+
+@app.get("/api/sites/{site_id}", response_model=SiteOut)
+def get_site(site_id: int, db: Session = Depends(get_db)):
+    row = db.query(Site).filter(Site.id == site_id, Site.active == True).first()
+    if not row:
+        raise HTTPException(404, "Site not found")
+
+    return SiteOut(
+        id=row.id,
+        name=row.name,
+        category=row.category,
+        province=row.province,
+        latitude=row.latitude,
+        longitude=row.longitude,
+        wiki_title=row.wiki_title,
+        image_url=row.image_url,
+        summary=row.summary,
+        health_tip=row.health_tip,
+        risk_level=row.risk_level,
+        recommended_items=row.recommended_items,
+        emergency_note=row.emergency_note,
+        active=row.active,
+        updated_at=row.updated_at,
+    )
 
 
 @app.post("/api/admin/sites", response_model=SiteOut)
@@ -257,8 +416,10 @@ def update_site(site_id: int, payload: SiteIn, db: Session = Depends(get_db), _a
     row = db.query(Site).filter(Site.id == site_id).first()
     if not row:
         raise HTTPException(404, "Not found")
+
     for k, v in payload.model_dump().items():
         setattr(row, k, v)
+
     row.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(row)
@@ -270,6 +431,7 @@ def delete_site(site_id: int, db: Session = Depends(get_db), _admin: User = Depe
     row = db.query(Site).filter(Site.id == site_id).first()
     if not row:
         raise HTTPException(404, "Not found")
+
     row.active = False
     row.updated_at = datetime.utcnow()
     db.commit()
@@ -277,7 +439,7 @@ def delete_site(site_id: int, db: Session = Depends(get_db), _admin: User = Depe
 
 
 # -----------------------------
-# Weather (Open-Meteo, no API key)
+# Weather
 # -----------------------------
 @app.get("/api/weather")
 async def weather(lat: float, lon: float):
@@ -287,6 +449,7 @@ async def weather(lat: float, lon: float):
         "longitude": lon,
         "current": "temperature_2m,apparent_temperature,precipitation,wind_speed_10m,weather_code",
     }
+
     async with httpx.AsyncClient(timeout=20) as client:
         r = await client.get(url, params=params)
         r.raise_for_status()
@@ -299,25 +462,25 @@ async def weather(lat: float, lon: float):
 
     if t is None:
         suggestion = "Dress comfortably for local conditions."
-    elif t >= 28:
-        suggestion = "Light clothing, hat, sunscreen, drink water."
-    elif t >= 20:
-        suggestion = "T-shirt + light layer. Comfortable walking shoes."
+    elif t >= 30:
+        suggestion = "Hot conditions: wear light clothing, a hat, sunscreen, and drink water frequently."
+    elif t >= 22:
+        suggestion = "Warm conditions: light clothing and comfortable walking shoes recommended."
     elif t >= 12:
-        suggestion = "Warm layer/jacket recommended."
+        suggestion = "Mild conditions: carry a light jacket."
     else:
-        suggestion = "Heavy jacket/thermal layers recommended."
+        suggestion = "Cool conditions: warm jacket or layered clothing recommended."
 
     if rain and rain > 0:
         suggestion += " Carry a rain jacket or umbrella."
     if wind and wind >= 25:
-        suggestion += " Windy: add a windbreaker."
+        suggestion += " Windy conditions: add a windbreaker."
 
     return {"current": current, "wear_suggestion": suggestion}
 
 
 # -----------------------------
-# Nearby clinics/hospitals (OpenStreetMap Overpass)
+# Nearby clinics / hospitals
 # -----------------------------
 @app.get("/api/nearby-health")
 async def nearby_health(lat: float, lon: float, radius_m: int = 10000):
@@ -328,9 +491,11 @@ async def nearby_health(lat: float, lon: float, radius_m: int = 10000):
       nwr(around:{radius_m},{lat},{lon})["amenity"="clinic"];
       nwr(around:{radius_m},{lat},{lon})["healthcare"="hospital"];
       nwr(around:{radius_m},{lat},{lon})["healthcare"="clinic"];
+      nwr(around:{radius_m},{lat},{lon})["amenity"="pharmacy"];
     );
     out center;
     """
+
     async with httpx.AsyncClient(timeout=25) as client:
         r = await client.post("https://overpass-api.de/api/interpreter", data=query)
         r.raise_for_status()
@@ -343,24 +508,28 @@ async def nearby_health(lat: float, lon: float, radius_m: int = 10000):
         center = el.get("center") or {"lat": el.get("lat"), "lon": el.get("lon")}
         if not center:
             continue
-        results.append({
-            "name": name,
-            "type": tags.get("amenity") or tags.get("healthcare") or "health",
-            "lat": center.get("lat"),
-            "lon": center.get("lon"),
-            "address": tags.get("addr:full") or tags.get("addr:street") or "",
-        })
+
+        results.append(
+            {
+                "name": name,
+                "type": tags.get("amenity") or tags.get("healthcare") or "health",
+                "lat": center.get("lat"),
+                "lon": center.get("lon"),
+                "address": tags.get("addr:full") or tags.get("addr:street") or "",
+            }
+        )
 
     return {"count": len(results), "results": results}
 
 
 # -----------------------------
-# Wikipedia summary + image
+# Wiki summary + image
 # -----------------------------
 @app.get("/api/wiki")
 async def wiki(title: str):
     safe_title = title.replace(" ", "_")
     url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{safe_title}"
+
     async with httpx.AsyncClient(timeout=20) as client:
         r = await client.get(url, headers={"accept": "application/json"})
         if r.status_code != 200:
